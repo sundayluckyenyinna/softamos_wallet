@@ -1,0 +1,39 @@
+############### Server configuration properties. #################
+server:
+  port: 2000
+
+################# Softamos application configuration properties. ###################
+app:
+  datasource:
+      host: localhost
+      port: 3306
+      username:  root
+      password:  123456professor
+      database:  softamos_agency
+      type: mysql
+
+  authorization:
+    token:
+      secret: Password!23#
+      expiresIn: 1440   #(in minutes)
+  otp:
+    expiresIn: 10*min
+    length: 4
+    anotherOtpWaitInSec: 36
+  hash:
+    passwordHashStrength: 10
+
+
+identity:
+  sequence:
+    length: 12
+
+
+swagger:
+  doc:
+    basePath: /api/docs
+
+
+microservice:
+  config:
+    port: 2001
