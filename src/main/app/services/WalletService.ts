@@ -26,19 +26,15 @@ import { TransactionType } from "../commons/TransactionType";
 import { TransactionStatus } from "../commons/TransactionStatus";
 import AgentWalletTransactionRepository from "../repositories/AgentWalletTransactionRepository";
 import ApiException from "../exceptions/ApiException";
-import JwtTokenUtil from "../utils/JwtTokenUtil";
-import AgentRepository from "../repositories/AgentRepository";
-import AgentVirtualAccount from "../models/AgentVirtualAccount";
-import AgentVirtualAccountRepository from "../repositories/AgentVirtualAccountRepository";
+
+
 
 @Injectable()
 export default class WalletService{
 
     constructor(
-      private readonly agentRepository: AgentRepository,
       private readonly walletRepository: AgentWalletRepository,
       private readonly walletValidatorService: WalletValidatorService,
-      private readonly agentVirtualAccountRepository: AgentVirtualAccountRepository,
       private readonly walletTransactionRepository: AgentWalletTransactionRepository
     ) {}
 
@@ -62,18 +58,6 @@ export default class WalletService{
         });
         return Promise.resolve(new ApiResponse(HttpStatus.OK, "Successful funding of agent wallet", walletData));
     }
-
-    async processDirectWalletTransferInstructions(token: string): Promise<ApiResponse<DirectTransferInstructions>>{
-        const mobileNumber: string = JwtTokenUtil.getMobileNumberFromToken(token);
-        const agent: Agent = await this.agentRepository.findOne({ where: { mobileNumber: mobileNumber }});
-        const virtualAccount: AgentVirtualAccount = await this.agentVirtualAccountRepository.findOne({ where: { agent: agent }});
-        if(!virtualAccount){
-            ApiException.throwNewInstance(HttpStatus.NOT_FOUND, `No virtual account record found for agent!`);
-        }
-        const responseData: DirectTransferInstructions = DirectTransferInstructions.fromVirtualAccount(virtualAccount);
-        return Promise.resolve(new ApiResponse(HttpStatus.OK, "Successful retrieval of agent virtual account", responseData));
-    }
-
 
     async processWalletWithdrawal(requestPayload: WalletTransactionRequest): Promise<ApiResponse<WalletTransactionData>> {
         const agent: Agent = await this.walletValidatorService.validateAgentWalletForTransaction(requestPayload);

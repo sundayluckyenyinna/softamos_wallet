@@ -2,14 +2,15 @@
 
 import AgentRepository from "../repositories/AgentRepository";
 import AgentVirtualAccountRepository from "../repositories/AgentVirtualAccountRepository";
-import { ApiResponse, DirectTransferInstructions, WalletTransactionData } from "../payloads/ResponsePayload";
+import { ApiResponse, DirectTransferInstructions } from "../payloads/ResponsePayload";
 import Agent from "../models/Agent";
 import { HttpStatus, Injectable } from "@nestjs/common";
-import JwtTokenUtil from "../utils/JwtTokenUtil";
 import AgentVirtualAccount from "../models/AgentVirtualAccount";
 import AppHelper from "../utils/AppHelper";
 import { BankData, MockBankRepository } from "../repositories/MockRepositories";
 import { CreateAccountRequest } from "../payloads/RequestPayload";
+import JwtTokenUtil from "../utils/JwtTokenUtil";
+import ApiException from "../exceptions/ApiException";
 
 @Injectable()
 export default class AccountService{
@@ -43,4 +44,14 @@ export default class AccountService{
     return Promise.resolve(new ApiResponse(HttpStatus.OK, "Successful creation of agent wallet", responseData));
   }
 
+    async processDirectWalletTransferInstructions(token: string): Promise<ApiResponse<DirectTransferInstructions>>{
+      const mobileNumber: string = JwtTokenUtil.getMobileNumberFromToken(token);
+      const agent: Agent = await this.agentRepository.findOne({ where: { mobileNumber: mobileNumber }});
+      const virtualAccount: AgentVirtualAccount = await this.virtualAccountRepository.findOne({ where: { agent: agent }});
+      if(!virtualAccount){
+        ApiException.throwNewInstance(HttpStatus.NOT_FOUND, `No virtual account record found for agent!`);
+      }
+      const responseData: DirectTransferInstructions = DirectTransferInstructions.fromVirtualAccount(virtualAccount);
+      return Promise.resolve(new ApiResponse(HttpStatus.OK, "Successful retrieval of agent virtual account", responseData));
+    }
 }

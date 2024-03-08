@@ -21,6 +21,7 @@ import { Request, Response } from "express";
 import { MessagePattern, Transport } from "@nestjs/microservices";
 import MessagePatternCommand from "../event/MessagePatternCommand";
 import { CreateAccountRequest } from "../payloads/RequestPayload";
+import AppHelper from "../utils/AppHelper";
 
 
 @ApiTags('Agent account service')
@@ -36,12 +37,20 @@ export default class AccountController {
 
 
   @MessagePattern({ cmd: MessagePatternCommand.CREATE_VIRTUAL_ACCOUNT })
-  @Post('/inter-bank/transfer-instructions')
+  @Post('/create')
   @ApiOperation({ description: "This API is used to process agent withdrawal from agent active wallet"})
   @ApiOkResponse({description: "Successful response", status: HttpStatus.OK, type: ApiResponse<DirectTransferInstructions>})
   async handleInterbankTransfer(@Req() request: Request, @Body() requestBody: CreateAccountRequest): Promise<ApiResponse<DirectTransferInstructions>>{
-    const authorization: string = request.headers.authorization || request.header('Authorization');
+    request.headers.authorization || request.header('Authorization');
     return await this.accountService.processVirtualAccountCreation(requestBody);
   }
 
+  @Get('/deposit/instructions')
+  @ApiOperation({ description: "This API is used to fetch wallet's direct transfer instructions"})
+  @ApiOkResponse({description: "Successful response", status: HttpStatus.OK, type: ApiResponse<DirectTransferInstructions>})
+  async handleWalletAccountDirectTransferInstruction(@Req() request: Request): Promise<ApiResponse<DirectTransferInstructions>>{
+    let authorizationToken: string = request.headers.authorization || request.header('Authorization');
+    authorizationToken = AppHelper.cleanToken(authorizationToken);
+    return await this.accountService.processDirectWalletTransferInstructions(authorizationToken);
+  }
 }

@@ -22,4 +22,8 @@ export default class AppHelper
   static getRandomIntegerBetween(minimum: number, maximum: number): number{
     return Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
   }
+
+  static cleanToken(token: string): string{
+     return token ? token.replace("Bearer ", "").trim() : "";
+  }
 }
